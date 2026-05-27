@@ -24,7 +24,7 @@ pub fn calculate_total_reward(blocks_mined: u64) -> f64 {
 /// Return true if the transaction fee is between 0.00001 and 0.01 BTC.
 pub fn is_valid_tx_fee(fee: f64) -> bool {
     // TODO: Check if fee is between 0.00001 and 0.01 BTC (inclusive)
-        (0.00001..=0.01).contains(&fee)
+    (0.00001..=0.01).contains(&fee)
 }
 
 /// Return true if the wallet balance is greater than 50.0 BTC.
@@ -38,8 +38,13 @@ pub fn tx_priority(size_bytes: u64, fee_btc: f64) -> &'static str {
     // TODO: Calculate fee rate (fee_btc / size_bytes) and use if/else if/else
     // High: > 0.00005, Medium: > 0.00001, otherwise Low
     let fee_rate = fee_btc / size_bytes as f64;
-    if fee_rate > 0.00005 { "high"} else if fee_rate > 0.00001{"medium"} else {"low"}
-        
+    if fee_rate > 0.00005 {
+        "high"
+    } else if fee_rate > 0.00001 {
+        "medium"
+    } else {
+        "low"
+    }
 }
 
 /// Return true if the network string equals "mainnet" (case-insensitive).
@@ -70,7 +75,7 @@ pub fn normalize_address(address: &str) -> String {
 pub fn add_utxo(utxos: Vec<Utxo>, new_utxo: Utxo) -> Vec<Utxo> {
     // TODO: Push new_utxo into utxos and return it
     let mut utxos = utxos;
-    
+
     utxos.push(new_utxo);
     utxos
 }
@@ -78,14 +83,18 @@ pub fn add_utxo(utxos: Vec<Utxo>, new_utxo: Utxo) -> Vec<Utxo> {
 /// Find the first transaction with a fee greater than 0.005 BTC.
 pub fn find_high_fee(fee_list: &[f64]) -> Option<(usize, f64)> {
     // TODO: Iterate with enumerate and return the first (index, fee) where fee > 0.005
-    fee_list.iter().copied().enumerate().find(|&(_, fee)|fee>0.005)
+    fee_list
+        .iter()
+        .copied()
+        .enumerate()
+        .find(|&(_, fee)| fee > 0.005)
 }
 
 /// Return basic wallet details as a tuple of (name, balance).
 pub fn get_wallet_details() -> (String, f64) {
     // TODO: Return a tuple with wallet name and balance
     let name: String = String::from("satoshi_wallet");
-    let balance: f64 = 50.0; 
+    let balance: f64 = 50.0;
 
     (name, balance)
 }
@@ -93,7 +102,10 @@ pub fn get_wallet_details() -> (String, f64) {
 /// Get the status of a transaction from the mempool or "not found".
 pub fn get_tx_status(tx_pool: &HashMap<String, String>, txid: &str) -> String {
     // TODO: Look up txid in tx_pool, returning the status or "not found"
-    tx_pool.get(txid).cloned().unwrap_or_else(|| String::from("not found"))
+    tx_pool
+        .get(txid)
+        .cloned()
+        .unwrap_or_else(|| String::from("not found"))
 }
 
 /// Destructure wallet_info and format a status string.
@@ -103,14 +115,13 @@ pub fn unpack_wallet_info(wallet_info: (String, f64)) -> String {
     let (name, balance) = wallet_info;
 
     format!("Wallet {} has balance: {} BTC", name, balance)
-
 }
 
 /// Convert BTC to satoshis (1 BTC = 100,000,000 sats).
 pub fn calculate_sats(btc: f64) -> u64 {
     // TODO: Multiply btc by BTC_TO_SATS and return as u64
     const BTC_TO_SATS: f64 = 100_000_000.0;
-    
+
     (btc * BTC_TO_SATS).round() as u64
 }
 
@@ -122,11 +133,7 @@ pub fn generate_address(prefix: &str) -> String {
     let suffix_len = 32 - prefix.len();
 
     // a light pseudo-random sequence by repeating charset
-    let suffix: String = charset
-        .chars()
-        .cycle()
-        .take(suffix_len)
-        .collect();
+    let suffix: String = charset.chars().cycle().take(suffix_len).collect();
 
     format!("{}{}", prefix, suffix)
 }
@@ -158,9 +165,10 @@ pub fn halving_schedule(blocks: &[u64]) -> HashMap<u64, u64> {
 
     for &block in blocks {
         let halvings = block / halving_interval;
-        
-        let reward = if halvings >= 64  {
-            0 } else {
+
+        let reward = if halvings >= 64 {
+            0
+        } else {
             base_reward >> halvings
         };
         result.insert(block, reward);
@@ -172,7 +180,11 @@ pub fn halving_schedule(blocks: &[u64]) -> HashMap<u64, u64> {
 pub fn find_utxo_with_min_value(utxos: &[Utxo], target: u64) -> Option<Utxo> {
     // TODO: Filter UTXOs to those with value >= target
     // TODO: Return the one with the smallest value, or None if none qualify
-    utxos.iter().filter(|utxo| utxo.value >= target).min_by_key(|utxo| utxo.value).cloned()
+    utxos
+        .iter()
+        .filter(|utxo| utxo.value >= target)
+        .min_by_key(|utxo| utxo.value)
+        .cloned()
 }
 
 /// Create a UTXO map from txid, vout, and arbitrary extra string fields.
@@ -194,18 +206,17 @@ pub fn create_utxo(
 
 // Implement extract_tx_version function below
 pub fn extract_tx_version(raw_tx_hex: &str) -> Result<u32, String> {
-   if raw_tx_hex.len() < 8 {  
+    if raw_tx_hex.len() < 8 {
         return Err(String::from("Transaction data too short"));
     }
 
     let versions_hex = &raw_tx_hex[..8];
-    
 
     let mut bytes = [0u8; 4];
     for i in 0..4 {
         let byte_str = &versions_hex[i * 2..(i * 2) + 2];
-        bytes[i] = u8::from_str_radix(byte_str, 16)
-            .map_err(|_| String::from("Hex decode error"))?;
+        bytes[i] =
+            u8::from_str_radix(byte_str, 16).map_err(|_| String::from("Hex decode error"))?;
     }
     let version = u32::from_le_bytes(bytes);
     Ok(version)
